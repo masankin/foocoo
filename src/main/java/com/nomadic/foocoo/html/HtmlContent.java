@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,10 +22,9 @@ import java.util.List;
 public class HtmlContent {
     public static String folderPath = "E:/foocoo/";
 
-    public static void getHtmlContent(String url) {
+    public static void getHtmlContent(final String url) {
         try {
             Document doc = Jsoup.connect(url)
-                    .data("query", "Java")
                     .userAgent("Mozilla")
                     .cookie("auth", "token")
                     .timeout(30000)
@@ -47,10 +47,13 @@ public class HtmlContent {
             }, new CollectionUtils.NextFilter() {
                 @Override
                 public boolean filter(Object o) {
-                    if (((Element) o).absUrl("href").startsWith(Dispatcher.startUrl))
-                        return true;
-                    else
-                        return false;
+                    boolean result;
+                    if (((Element) o).absUrl("href").startsWith(Dispatcher.startUrl)) {
+                        result = true;
+                    } else {
+                        result = false;
+                    }
+                    return result;
                 }
             });
 
@@ -59,7 +62,23 @@ public class HtmlContent {
                 public void callback(Object o) {
                     imgList.add(((Element) o).absUrl("src"));
                 }
+            }, new CollectionUtils.NextFilter() {
+                @Override
+                public boolean filter(Object o) {
+                    String imgUrl = ((Element) o).absUrl("src");
+                    boolean result = true;
+                    try {
+                        if (FileUtils.getFile(folderPath, imgUrl).exists()) {
+                            result = false;
+                        }
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                    }
+                    sout(result, imgUrl);
+                    return result;
+                }
             });
+
             CollectionUtils.collectionCallback(cssElements, new CollectionUtils.NextCallback() {
                 @Override
                 public void callback(Object o) {
@@ -69,7 +88,6 @@ public class HtmlContent {
             ATagFactory.getUrlQueueFactory().addUrlToWaitingQueue(aList);
             ImgTagFactory.getUrlQueueFactory().addUrlToWaitingQueue(imgList);
             CssTagFactory.getUrlQueueFactory().addUrlToWaitingQueue(cssList);
-            System.out.println("");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -84,4 +102,14 @@ public class HtmlContent {
         }
     }
 
+    static int existsNum = 0;
+    static int newNum = 0;
+
+    public static void sout(boolean e, String url) {
+        if (e) {
+            System.out.println(newNum++ + " 新文件 " + url);
+        } else {
+            System.out.println(existsNum++ + " 文件 " + url + " 已经存在");
+        }
+    }
 }

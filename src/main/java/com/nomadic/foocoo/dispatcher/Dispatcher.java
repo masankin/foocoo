@@ -39,6 +39,5 @@ public class Dispatcher {
         threadPoolExecutor.execute(new CssTagFactory());
         threadPoolExecutor.execute(new ATagFactory());
         threadPoolExecutor.execute(new ImgTagFactory());
-
     }
 }
