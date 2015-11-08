@@ -67,7 +67,7 @@ public class UrlQueueFactory {
      * @return
      */
     public boolean handlerComplete(String url) {
-        if (url.equals(waitingQueue.peek()) || true) {
+        if (url.equals(waitingQueue.peek())) {
             visitedQueue.offer(waitingQueue.poll());
             return true;
         }
